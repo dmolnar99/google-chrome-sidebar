@@ -11,7 +11,11 @@ export type Command =
   /** Send the item's tab back to the saved URL. */
   | { type: 'reset'; itemId: NodeId; windowId: number }
   /** Save a tab as a new item and link it. */
-  | { type: 'saveTab'; tabId: number; container: ContainerId; index?: number };
+  | { type: 'saveTab'; tabId: number; container: ContainerId; index?: number }
+  /** Delete the item but keep (or open) its tab, placed at `index` among the window's tabs. */
+  | { type: 'unpin'; itemId: NodeId; windowId: number; index: number }
+  /** Move a tab to insertion point `index`, counted before the tab leaves its old spot. */
+  | { type: 'moveTab'; tabId: number; index: number };
 
 type Response = { ok: true } | { ok: false; error: string };
 

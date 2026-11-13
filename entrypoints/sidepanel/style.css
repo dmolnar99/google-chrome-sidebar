@@ -1,6 +1,7 @@
 @import '@/src/ui/theme.css';
 
 main { padding: 10px; display: flex; flex-direction: column; gap: 10px; min-height: 100vh; }
+.error { position: sticky; bottom: 8px; }
 button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
 
 .favorites { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
@@ -25,7 +26,11 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 .row:hover .close, .row.active .close { visibility: visible; }
 
 /* Drag and drop */
-.pinned { flex: 1; border-radius: 10px; }
+.pinned { border-radius: 10px; padding-bottom: 6px; }
+.tabs { flex: 1; border-radius: 10px; display: flex; flex-direction: column; padding-bottom: 24px; }
+.divider { height: 1px; margin: 0 8px 6px; background: var(--hover); }
+.row.new-tab { color: var(--muted); }
+.row.new-tab:hover { color: var(--fg); }
 .favorites, .pinned { transition: background 0.1s; }
 .drop-section { background: var(--tile); }
 .dragging { opacity: 0.35; }
@@ -43,8 +48,6 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 
 .empty { padding: 14px; border-radius: 10px; background: var(--tile); color: var(--muted); text-align: center; }
 .empty:hover { background: var(--hover); color: var(--fg); }
-.dev-controls { display: flex; gap: 6px; margin-top: auto; }
-.dev-controls button { padding: 4px 8px; border-radius: 6px; background: var(--tile); color: var(--muted); }
 .error { margin: 0; color: var(--danger); font-size: 12px; }
 
 .menu { position: fixed; z-index: 10; min-width: 170px; padding: 4px; border-radius: 10px; background: var(--surface); box-shadow: var(--shadow); display: flex; flex-direction: column; }

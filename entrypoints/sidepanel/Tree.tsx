@@ -1,7 +1,9 @@
+import type { DragSource } from '@/src/model/drop';
 import type { Folder, Item, NodeId } from '@/src/model/types';
 import { classes, faviconUrl, type Ctx } from './ctx';
 import { useNodeDnd, useSectionDrop } from './dnd';
 import { folderMenu, itemMenu, pinnedMenu } from './menus';
+import { tabFavicon } from './Tabs';
 
 function ItemRow({ ctx, item }: { ctx: Ctx; item: Item }) {
   const ts = ctx.tabStateOf(item);
@@ -91,13 +93,23 @@ export function Pinned({ ctx }: { ctx: Ctx }) {
       onContextMenu={(e) => ctx.openMenu(e, pinnedMenu(ctx))}
     >
       <Tree ctx={ctx} ids={ctx.state.pinned} />
+      {ctx.state.pinned.length === 0 && section.isDragging && <div className="placeholder">Drop here to pin</div>}
     </section>
   );
 }
 
 /** What follows the pointer while dragging. */
-export function DragPreview({ ctx, id }: { ctx: Ctx; id: NodeId }) {
-  const node = ctx.state.nodes[id];
+export function DragPreview({ ctx, source, tab }: { ctx: Ctx; source: DragSource; tab?: Browser.tabs.Tab }) {
+  if (source.kind === 'tab') {
+    if (!tab) return null;
+    return (
+      <div className="row drag-preview">
+        <img src={tabFavicon(tab)} alt="" />
+        <span className="title">{tab.title || tab.url}</span>
+      </div>
+    );
+  }
+  const node = ctx.state.nodes[source.id];
   if (!node) return null;
   return (
     <div className="row drag-preview">

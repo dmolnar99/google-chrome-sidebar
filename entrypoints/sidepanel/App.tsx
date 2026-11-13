@@ -7,6 +7,7 @@ import { SidebarDnd } from './dnd';
 import { Favorites } from './Favorites';
 import { useLinks, useSidebar, useWindowTabs } from './hooks';
 import { Menu, type MenuEntry } from './Menu';
+import { Tabs, type Tab } from './Tabs';
 import { DragPreview, Pinned } from './Tree';
 
 export function App() {
@@ -38,18 +39,28 @@ export function App() {
     ask: setDialog,
   };
 
-  const saveActiveTab = (container: 'favorites' | 'pinned') => {
-    const active = [...win.tabs.values()].find((t) => t.active);
-    if (active?.id !== undefined) ctx.run({ type: 'saveTab', tabId: active.id, container });
-  };
+  const linkedTabs = new Set(Object.keys(links).map(Number));
+  const allTabs = [...win.tabs.values()].filter((t): t is Tab => t.id !== undefined).sort((a, b) => a.index - b.index);
+  const plainTabs = allTabs.filter((t) => !linkedTabs.has(t.id));
 
   const isEmpty = state.favorites.length === 0 && state.pinned.length === 0;
   return (
     <SidebarDnd
       state={state}
-      onMove={(id, container, index) => ctx.run({ type: 'sidebar', op: { type: 'move', id, container, index } })}
+      tabCount={allTabs.length}
+      tabIndex={(tabId) => win.tabs.get(tabId)?.index}
+      onDrop={(action) => {
+        switch (action.type) {
+          case 'move':
+            return ctx.run({ type: 'sidebar', op: action });
+          case 'unpin':
+            return ctx.run({ ...action, windowId: win.windowId });
+          default:
+            return ctx.run(action);
+        }
+      }}
       onExpand={(id) => ctx.run({ type: 'sidebar', op: { type: 'update', id, patch: { collapsed: false } } })}
-      renderOverlay={(id) => <DragPreview ctx={ctx} id={id} />}
+      renderOverlay={(source) => <DragPreview ctx={ctx} source={source} tab={source.kind === 'tab' ? win.tabs.get(source.tabId) : undefined} />}
     >
       <main onContextMenu={(e) => e.preventDefault()}>
         {isEmpty && (
@@ -59,11 +70,7 @@ export function App() {
         )}
         <Favorites ctx={ctx} />
         <Pinned ctx={ctx} />
-        {/* Temporary controls until the Tabs list lands (milestone 5). */}
-        <div className="dev-controls">
-          <button onClick={() => saveActiveTab('favorites')}>+ Favorite</button>
-          <button onClick={() => saveActiveTab('pinned')}>+ Pin</button>
-        </div>
+        <Tabs ctx={ctx} tabs={plainTabs} />
         {error && <p className="error">{error}</p>}
         {menu && <Menu {...menu} onClose={closeMenu} />}
         {dialog && <Dialog request={dialog} onClose={() => setDialog(undefined)} />}

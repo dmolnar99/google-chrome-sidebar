@@ -60,3 +60,49 @@ export function resolveMove(
   }
   return { container: target.container, index };
 }
+
+/** Something being dragged: a sidebar node, or one of the window's plain tabs. */
+export type DragSource = { kind: 'node'; id: NodeId } | { kind: 'tab'; tabId: number };
+
+/** Where it's being dropped: a position in the sidebar tree, or an insertion index among Chrome's tabs. */
+export type Destination = ({ kind: 'tree' } & DropTarget) | { kind: 'tabs'; index: number };
+
+/** The command a drop turns into. Tab indexes are insertion points before the dragged tab moves. */
+export type DropAction =
+  | { type: 'move'; id: NodeId; container: ContainerId; index: number }
+  | { type: 'saveTab'; tabId: number; container: ContainerId; index: number }
+  | { type: 'unpin'; itemId: NodeId; index: number }
+  | { type: 'moveTab'; tabId: number; index: number };
+
+/**
+ * Where a tab ends up when inserted at `insertAt` (counted before it is taken out of its old
+ * spot at `from`). Chrome's tabs.move expects this final index.
+ */
+export function finalTabIndex(from: number, insertAt: number): number {
+  return from < insertAt ? insertAt - 1 : insertAt;
+}
+
+/** Decides what a drop does, or undefined if it isn't allowed or changes nothing. */
+export function resolveDrop(
+  state: SidebarState,
+  source: DragSource,
+  dest: Destination,
+  tabIndex: (tabId: number) => number | undefined,
+): DropAction | undefined {
+  if (source.kind === 'node') {
+    if (dest.kind === 'tree') {
+      const move = resolveMove(state, source.id, dest);
+      return move && { type: 'move', id: source.id, ...move };
+    }
+    // Only items turn back into tabs; folders stay in the sidebar.
+    return state.nodes[source.id]?.kind === 'item' ? { type: 'unpin', itemId: source.id, index: dest.index } : undefined;
+  }
+  if (dest.kind === 'tree') {
+    const container = state.nodes[dest.container];
+    if (dest.container !== 'favorites' && dest.container !== 'pinned' && container?.kind !== 'folder') return undefined;
+    return { type: 'saveTab', tabId: source.tabId, container: dest.container, index: dest.index };
+  }
+  const from = tabIndex(source.tabId);
+  if (from === undefined || finalTabIndex(from, dest.index) === from) return undefined;
+  return { type: 'moveTab', tabId: source.tabId, index: dest.index };
+}

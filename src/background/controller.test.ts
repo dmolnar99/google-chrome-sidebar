@@ -108,3 +108,31 @@ describe('Controller', () => {
     expect(await fakeBrowser.tabs.query({ url: URL_A })).toHaveLength(1);
   });
 });
+
+describe('Controller: unpin and tab moves', () => {
+  beforeEach(() => fakeBrowser.reset());
+
+  it('unpinning an open item keeps its tab', async () => {
+    const { controller, windowId } = await setup();
+    await controller.handle({ type: 'activate', itemId: 'a', windowId });
+    const [tab] = await fakeBrowser.tabs.query({ url: URL_A });
+    // The fake browser has no tabs.move; the real one does.
+    fakeBrowser.tabs.move = (async () => tab) as never;
+    await controller.handle({ type: 'unpin', itemId: 'a', windowId, index: 0 });
+    expect((await sidebarStore.getValue()).nodes.a).toBeUndefined();
+    expect(await links()).toEqual({});
+    expect(await fakeBrowser.tabs.query({ url: URL_A })).toHaveLength(1);
+  });
+
+  it('unpinning a closed item opens it as a plain tab', async () => {
+    const { controller, windowId } = await setup();
+    await controller.handle({ type: 'unpin', itemId: 'a', windowId, index: 0 });
+    expect(await fakeBrowser.tabs.query({ url: URL_A })).toHaveLength(1);
+    expect(await links()).toEqual({});
+  });
+
+  it('refuses to unpin a folder', async () => {
+    const { controller, windowId } = await setup();
+    await expect(controller.handle({ type: 'unpin', itemId: 'F', windowId, index: 0 })).rejects.toThrow(/Only items/);
+  });
+});

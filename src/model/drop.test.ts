@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { resolveMove, targetForRow, zoneAt } from './drop';
+import { finalTabIndex, resolveDrop, resolveMove, targetForRow, zoneAt } from './drop';
 import { addNode, emptyState, moveNode } from './tree';
 import type { SidebarNode, SidebarState } from './types';
 
@@ -72,5 +72,45 @@ describe('drag and drop', () => {
     const s = sample();
     const move = resolveMove(s, 'b', { container: 'pinned', index: s.pinned.length });
     expect(move).toEqual({ container: 'pinned', index: 3 });
+  });
+});
+
+describe('resolveDrop', () => {
+  const tabIndex = (id: number) => ({ 100: 0, 101: 1, 102: 2 })[id];
+
+  it('saves a tab into the tree at the exact target position', () => {
+    expect(resolveDrop(sample(), { kind: 'tab', tabId: 101 }, { kind: 'tree', container: 'F', index: 1 }, tabIndex)).toEqual({
+      type: 'saveTab',
+      tabId: 101,
+      container: 'F',
+      index: 1,
+    });
+  });
+
+  it('unpins items into the tab list, but not folders', () => {
+    expect(resolveDrop(sample(), { kind: 'node', id: 'b' }, { kind: 'tabs', index: 2 }, tabIndex)).toEqual({ type: 'unpin', itemId: 'b', index: 2 });
+    expect(resolveDrop(sample(), { kind: 'node', id: 'F' }, { kind: 'tabs', index: 2 }, tabIndex)).toBeUndefined();
+  });
+
+  it('reorders tabs and ignores drops that keep a tab in place', () => {
+    expect(resolveDrop(sample(), { kind: 'tab', tabId: 100 }, { kind: 'tabs', index: 3 }, tabIndex)).toEqual({ type: 'moveTab', tabId: 100, index: 3 });
+    expect(resolveDrop(sample(), { kind: 'tab', tabId: 101 }, { kind: 'tabs', index: 1 }, tabIndex)).toBeUndefined();
+    expect(resolveDrop(sample(), { kind: 'tab', tabId: 101 }, { kind: 'tabs', index: 2 }, tabIndex)).toBeUndefined();
+  });
+
+  it('still moves nodes within the tree', () => {
+    expect(resolveDrop(sample(), { kind: 'node', id: 'a' }, { kind: 'tree', container: 'pinned', index: 3 }, tabIndex)).toEqual({
+      type: 'move',
+      id: 'a',
+      container: 'pinned',
+      index: 2,
+    });
+  });
+});
+
+describe('finalTabIndex', () => {
+  it('accounts for the tab leaving its old spot', () => {
+    expect(finalTabIndex(0, 3)).toBe(2);
+    expect(finalTabIndex(3, 0)).toBe(0);
   });
 });

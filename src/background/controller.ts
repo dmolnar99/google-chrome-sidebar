@@ -1,6 +1,7 @@
 import { linksStore } from '@/src/links/store';
 import { linkTab, moveTab, pruneLinks, relink, tabForItem, unlinkTab, type Links } from '@/src/links/links';
 import type { Command } from '@/src/messages';
+import { finalTabIndex } from '@/src/model/drop';
 import { applyOp } from '@/src/model/ops';
 import { sidebarStore } from '@/src/model/store';
 import { newId } from '@/src/model/tree';
@@ -111,7 +112,32 @@ export class Controller {
         await this.updateLinks((l) => linkTab(l, tab.id!, item.id, tab.windowId));
         return;
       }
+      case 'unpin': {
+        const state = await sidebarStore.getValue();
+        const item = state.nodes[command.itemId];
+        if (item?.kind !== 'item') throw new Error('Only items can be unpinned');
+        const tabId = tabForItem(await this.links(), item.id, command.windowId);
+        const next = applyOp(state, { type: 'remove', id: item.id });
+        await sidebarStore.setValue(next);
+        await this.updateLinks((l) => pruneLinks(l, (id) => !!next.nodes[id]));
+        if (tabId === undefined) {
+          await browser.tabs.create({ windowId: command.windowId, url: item.url, index: command.index, active: true });
+        } else {
+          await this.moveTabTo(tabId, command.index);
+        }
+        return;
+      }
+      case 'moveTab':
+        await this.moveTabTo(command.tabId, command.index);
+        return;
     }
+  }
+
+  private async moveTabTo(tabId: number, insertAt: number) {
+    const tab = await browser.tabs.get(tabId);
+    // Chrome keeps pinned tabs at the front; a plain tab can't sit among them.
+    if (tab.pinned) await browser.tabs.update(tabId, { pinned: false });
+    await browser.tabs.move(tabId, { index: finalTabIndex(tab.index, insertAt) });
   }
 
   onTabRemoved(tabId: number) {
