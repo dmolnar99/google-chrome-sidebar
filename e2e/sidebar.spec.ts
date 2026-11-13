@@ -123,7 +123,7 @@ test('backup export and restore round-trip', async ({ context, extensionId, pane
 
 test('text renders at the intended size, not Chrome’s 75% default for extension pages', async ({ panel }) => {
   const size = await row(panel, 'News page').locator('.title').evaluate((el) => getComputedStyle(el).fontSize);
-  expect(size).toBe('15px');
+  expect(size).toBe('14px');
 });
 
 test.describe('split view', () => {

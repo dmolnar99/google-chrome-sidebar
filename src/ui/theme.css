@@ -19,7 +19,7 @@
   --danger: #c2402f;
   --accent: #3b6fe0;
   /* SF Pro on macOS, as in Arc. (Chrome ignores -apple-system, so system-ui it is.) */
-  font: 15px/1.4 system-ui, sans-serif;
+  font: 14px/1.4 system-ui, sans-serif;
   letter-spacing: -0.1px;
 }
 @media (prefers-color-scheme: dark) {
