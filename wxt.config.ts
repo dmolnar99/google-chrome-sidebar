@@ -8,7 +8,8 @@ export default defineConfig({
   modules: ['@wxt-dev/module-react'],
   manifest: {
     name: 'Sidebar',
-    description: 'An Arc-style sidebar for Chrome: Favorites, pinned items and folders.',
+    // Also the Chrome Web Store summary (max 132 characters).
+    description: "Favorites, pinned tabs and folders in Chrome's side panel. Drag tabs in to keep them, import from Arc, all on your device.",
     permissions: ['sidePanel', 'storage', 'tabs', 'favicon'],
     action: { default_title: 'Open Sidebar' },
     // Chrome allows at most four suggested keys; the rest are assignable in chrome://extensions/shortcuts.
