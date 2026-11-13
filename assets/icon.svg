@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <!-- Chrome Web Store guidance: 96×96 artwork centred on a 128×128 canvas. -->
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#86cbe6"/>
+      <stop offset="1" stop-color="#3a86ad"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="2" stdDeviation="2.5" flood-color="#0b3c55" flood-opacity="0.28"/>
+    </filter>
+  </defs>
+  <rect x="16" y="16" width="96" height="96" rx="24" fill="url(#bg)"/>
+  <!-- A browser window… -->
+  <rect x="29" y="35" width="70" height="58" rx="10" fill="#ffffff" filter="url(#shadow)"/>
+  <!-- …whose left side is the sidebar: Favorites tiles, then rows. -->
+  <rect x="34" y="40" width="24" height="48" rx="6" fill="#d3ebf5"/>
+  <rect x="38" y="45" width="7" height="6" rx="2" fill="#3a86ad"/>
+  <rect x="47" y="45" width="7" height="6" rx="2" fill="#6bb8d8"/>
+  <rect x="38" y="56" width="16" height="3.5" rx="1.75" fill="#3a86ad"/>
+  <rect x="38" y="63" width="12" height="3.5" rx="1.75" fill="#8cc6df"/>
+  <rect x="38" y="70" width="14" height="3.5" rx="1.75" fill="#8cc6df"/>
+</svg>

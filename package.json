@@ -11,7 +11,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "postinstall": "wxt prepare",
-    "test:e2e": "wxt build && playwright test"
+    "test:e2e": "wxt build && playwright test",
+    "icons": "node scripts/render-icons.mjs"
   },
   "dependencies": {
     "@dnd-kit/core": "6.3.1",
