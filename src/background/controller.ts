@@ -1,0 +1,134 @@
+import { linksStore } from '@/src/links/store';
+import { linkTab, moveTab, pruneLinks, relink, tabForItem, unlinkTab, type Links } from '@/src/links/links';
+import type { Command } from '@/src/messages';
+import { applyOp } from '@/src/model/ops';
+import { sidebarStore } from '@/src/model/store';
+import { newId } from '@/src/model/tree';
+import type { Item, SidebarState } from '@/src/model/types';
+
+function allItems(state: SidebarState): Item[] {
+  return Object.values(state.nodes).filter((n): n is Item => n.kind === 'item');
+}
+
+/**
+ * Owns the saved sidebar and the item–tab links. Every change runs through one queue, so
+ * read-modify-write cycles from several windows can't overwrite each other.
+ */
+export class Controller {
+  private queue: Promise<unknown> = Promise.resolve();
+
+  private run<T>(task: () => Promise<T>): Promise<T> {
+    const result = this.queue.then(task);
+    this.queue = result.catch(() => {});
+    return result;
+  }
+
+  private async links(): Promise<Links> {
+    const links = await linksStore.getValue();
+    if (links) return links;
+    // First run since a browser restart or extension reload: tab ids changed, match by URL.
+    const tabs = await browser.tabs.query({});
+    const rebuilt = relink(
+      tabs.flatMap((t) => (t.id === undefined ? [] : [{ id: t.id, windowId: t.windowId, url: t.url }])),
+      allItems(await sidebarStore.getValue()),
+    );
+    await linksStore.setValue(rebuilt);
+    return rebuilt;
+  }
+
+  private async updateLinks(fn: (links: Links) => Links) {
+    const links = await this.links();
+    const next = fn(links);
+    if (next !== links) await linksStore.setValue(next);
+  }
+
+  /** Builds links if needed; call on worker start. */
+  init() {
+    return this.run(() => this.links());
+  }
+
+  handle(command: Command): Promise<void> {
+    return this.run(() => this.execute(command));
+  }
+
+  private async execute(command: Command) {
+    switch (command.type) {
+      case 'sidebar': {
+        const state = applyOp(await sidebarStore.getValue(), command.op);
+        await sidebarStore.setValue(state);
+        if (command.op.type === 'replace') {
+          // Brand-new items: match them to open tabs by URL.
+          await linksStore.setValue(null);
+          await this.links();
+        } else {
+          await this.updateLinks((l) => pruneLinks(l, (id) => !!state.nodes[id]));
+        }
+        return;
+      }
+      case 'activate': {
+        const state = await sidebarStore.getValue();
+        const item = state.nodes[command.itemId];
+        if (item?.kind !== 'item') throw new Error(`Unknown item: ${command.itemId}`);
+        const tabId = tabForItem(await this.links(), item.id, command.windowId);
+        if (tabId !== undefined) {
+          try {
+            await browser.tabs.update(tabId, { active: true });
+            return;
+          } catch {
+            // The tab is gone without us hearing about it; drop the link and open a fresh one.
+            await this.updateLinks((l) => unlinkTab(l, tabId));
+          }
+        }
+        const tab = await browser.tabs.create({ windowId: command.windowId, url: item.url, active: true });
+        if (tab.id !== undefined) await this.updateLinks((l) => linkTab(l, tab.id!, item.id, command.windowId));
+        return;
+      }
+      case 'closeTab': {
+        const tabId = tabForItem(await this.links(), command.itemId, command.windowId);
+        if (tabId === undefined) return;
+        await this.updateLinks((l) => unlinkTab(l, tabId));
+        await browser.tabs.remove(tabId);
+        return;
+      }
+      case 'reset': {
+        const item = (await sidebarStore.getValue()).nodes[command.itemId];
+        const tabId = tabForItem(await this.links(), command.itemId, command.windowId);
+        if (item?.kind !== 'item' || tabId === undefined) return;
+        await browser.tabs.update(tabId, { url: item.url });
+        return;
+      }
+      case 'saveTab': {
+        const tab = await browser.tabs.get(command.tabId);
+        if (!tab.url || tab.id === undefined) throw new Error('That tab has no URL to save');
+        const item: Item = { kind: 'item', id: newId(), title: tab.title || tab.url, url: tab.url };
+        const state = applyOp(await sidebarStore.getValue(), {
+          type: 'add',
+          node: item,
+          container: command.container,
+          index: command.index,
+        });
+        await sidebarStore.setValue(state);
+        await this.updateLinks((l) => linkTab(l, tab.id!, item.id, tab.windowId));
+        return;
+      }
+    }
+  }
+
+  onTabRemoved(tabId: number) {
+    return this.run(() => this.updateLinks((l) => unlinkTab(l, tabId)));
+  }
+
+  onTabAttached(tabId: number, windowId: number) {
+    return this.run(() => this.updateLinks((l) => moveTab(l, tabId, windowId)));
+  }
+
+  /** Chrome swapped one tab for another (prerendering); keep the link. */
+  onTabReplaced(addedTabId: number, removedTabId: number) {
+    return this.run(() =>
+      this.updateLinks((l) => {
+        const link = l[removedTabId];
+        return link ? linkTab(unlinkTab(l, removedTabId), addedTabId, link.itemId, link.windowId) : l;
+      }),
+    );
+  }
+}

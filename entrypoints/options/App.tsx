@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { parseArcSidebar, type ArcImportResult } from '@/src/import/arc';
+import { send } from '@/src/messages';
 import { sidebarStore } from '@/src/model/store';
 
 const ARC_PATH = '~/Library/Application Support/Arc/StorableSidebar.json';
@@ -44,7 +45,7 @@ export function App() {
     const current = await sidebarStore.getValue();
     const hasData = current.favorites.length > 0 || current.pinned.length > 0;
     if (hasData && !confirm('This replaces everything currently in your sidebar. Continue?')) return;
-    await sidebarStore.setValue(result.state);
+    await send({ type: 'sidebar', op: { type: 'replace', state: result.state } });
     setStatus({ step: 'done', result });
   }
 

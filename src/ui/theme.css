@@ -5,6 +5,11 @@
   --muted: #6f6b66;
   --tile: rgba(0, 0, 0, 0.05);
   --hover: rgba(0, 0, 0, 0.06);
+  --active: #ffffff;
+  --active-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
+  --surface: #ffffff;
+  --shadow: 0 6px 24px rgba(0, 0, 0, 0.16), 0 0 0 1px rgba(0, 0, 0, 0.06);
+  --danger: #c2402f;
   font: 13px/1.4 system-ui, -apple-system, sans-serif;
 }
 @media (prefers-color-scheme: dark) {
@@ -14,6 +19,11 @@
     --muted: #9b978f;
     --tile: rgba(255, 255, 255, 0.06);
     --hover: rgba(255, 255, 255, 0.08);
+    --active: rgba(255, 255, 255, 0.14);
+    --active-shadow: none;
+    --surface: #2b2a28;
+    --shadow: 0 6px 24px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.08);
+    --danger: #ef7a68;
   }
 }
 * { box-sizing: border-box; }
