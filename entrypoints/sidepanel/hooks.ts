@@ -36,10 +36,11 @@ export function useWindowTabs(): WindowTabs | undefined {
   useEffect(() => {
     let cancelled = false;
     let windowId: number | undefined;
-    let pending = 0;
+    let pending: ReturnType<typeof setTimeout> | undefined;
+    // Batches bursts of tab events. A timer rather than requestAnimationFrame, which stalls while hidden.
     const refresh = () => {
-      cancelAnimationFrame(pending);
-      pending = requestAnimationFrame(async () => {
+      clearTimeout(pending);
+      pending = setTimeout(async () => {
         if (windowId === undefined) {
           windowId = (await browser.windows.getCurrent()).id;
           if (windowId !== undefined) connectPanel(windowId);
@@ -47,7 +48,7 @@ export function useWindowTabs(): WindowTabs | undefined {
         if (windowId === undefined || cancelled) return;
         const tabs = await browser.tabs.query({ windowId });
         if (!cancelled) setValue({ windowId, tabs: new Map(tabs.flatMap((t) => (t.id === undefined ? [] : [[t.id, t]]))) });
-      });
+      }, 16);
     };
     const events = [
       browser.tabs.onCreated,
@@ -63,7 +64,7 @@ export function useWindowTabs(): WindowTabs | undefined {
     refresh();
     return () => {
       cancelled = true;
-      cancelAnimationFrame(pending);
+      clearTimeout(pending);
       events.forEach((e) => e.removeListener(refresh));
     };
   }, []);

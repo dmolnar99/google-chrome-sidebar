@@ -1,0 +1,187 @@
+{
+  "version": 1,
+  "sidebar": {
+    "containers": [
+      {
+        "global": {}
+      },
+      {
+        "topAppsContainerIDs": [
+          {
+            "default": true
+          },
+          "fav"
+        ],
+        "spaces": [
+          "space",
+          {
+            "id": "space",
+            "title": "Personal",
+            "containerIDs": [
+              "unpinned",
+              "unpinned",
+              "pinned",
+              "pinned"
+            ],
+            "customInfo": {
+              "windowTheme": {
+                "primaryColorPalette": {
+                  "midTone": {
+                    "red": 0.4236,
+                    "green": 0.7286,
+                    "blue": 0.8512
+                  }
+                }
+              }
+            }
+          }
+        ],
+        "items": [
+          "fav",
+          {
+            "id": "fav",
+            "title": null,
+            "data": {
+              "itemContainer": {}
+            },
+            "childrenIds": [
+              "mail",
+              "video",
+              "code"
+            ],
+            "parentID": null
+          },
+          "mail",
+          {
+            "id": "mail",
+            "title": null,
+            "data": {
+              "tab": {
+                "savedURL": "http://localhost:4317/page/mail",
+                "savedTitle": "Mail page"
+              }
+            },
+            "childrenIds": [],
+            "parentID": null
+          },
+          "video",
+          {
+            "id": "video",
+            "title": null,
+            "data": {
+              "tab": {
+                "savedURL": "http://localhost:4317/page/video",
+                "savedTitle": "Video page"
+              }
+            },
+            "childrenIds": [],
+            "parentID": null
+          },
+          "code",
+          {
+            "id": "code",
+            "title": null,
+            "data": {
+              "tab": {
+                "savedURL": "http://localhost:4317/page/code",
+                "savedTitle": "Code page"
+              }
+            },
+            "childrenIds": [],
+            "parentID": null
+          },
+          "pinned",
+          {
+            "id": "pinned",
+            "title": null,
+            "data": {
+              "itemContainer": {}
+            },
+            "childrenIds": [
+              "news",
+              "work"
+            ],
+            "parentID": null
+          },
+          "news",
+          {
+            "id": "news",
+            "title": null,
+            "data": {
+              "tab": {
+                "savedURL": "http://localhost:4317/page/news",
+                "savedTitle": "News page"
+              }
+            },
+            "childrenIds": [],
+            "parentID": null
+          },
+          "work",
+          {
+            "id": "work",
+            "title": "Work",
+            "data": {
+              "list": {}
+            },
+            "childrenIds": [
+              "docs",
+              "calendar"
+            ],
+            "parentID": null
+          },
+          "docs",
+          {
+            "id": "docs",
+            "title": null,
+            "data": {
+              "tab": {
+                "savedURL": "http://localhost:4317/page/docs",
+                "savedTitle": "Docs page"
+              }
+            },
+            "childrenIds": [],
+            "parentID": null
+          },
+          "calendar",
+          {
+            "id": "calendar",
+            "title": null,
+            "data": {
+              "tab": {
+                "savedURL": "http://localhost:4317/page/calendar",
+                "savedTitle": "Calendar page"
+              }
+            },
+            "childrenIds": [],
+            "parentID": null
+          },
+          "unpinned",
+          {
+            "id": "unpinned",
+            "title": null,
+            "data": {
+              "itemContainer": {}
+            },
+            "childrenIds": [
+              "today"
+            ],
+            "parentID": null
+          },
+          "today",
+          {
+            "id": "today",
+            "title": null,
+            "data": {
+              "tab": {
+                "savedURL": "http://localhost:4317/page/today",
+                "savedTitle": "Today page"
+              }
+            },
+            "childrenIds": [],
+            "parentID": null
+          }
+        ]
+      }
+    ]
+  }
+}

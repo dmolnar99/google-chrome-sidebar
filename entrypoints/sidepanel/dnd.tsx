@@ -119,7 +119,10 @@ export function SidebarDnd(props: {
       sensors={sensors}
       collisionDetection={collision}
       onDragStart={(e) => setSource(e.active.data.current as DragSource)}
+      // onDragMove reports the previous pointer position's target; onDragOver fires once the
+      // target catches up. Tracking both keeps the drop position in sync with the pointer.
       onDragMove={track}
+      onDragOver={track}
       onDragEnd={() => {
         if (drop) props.onDrop(drop.action);
         reset();

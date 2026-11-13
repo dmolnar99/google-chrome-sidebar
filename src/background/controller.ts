@@ -106,8 +106,9 @@ export class Controller {
       case 'closeTab': {
         const tabId = tabForItem(await this.links(), command.itemId, command.windowId);
         if (tabId === undefined) return;
-        await this.updateLinks((l) => unlinkTab(l, tabId));
+        // Close first: unlinking first would briefly show the tab as a plain tab in the panel.
         await browser.tabs.remove(tabId);
+        await this.updateLinks((l) => unlinkTab(l, tabId));
         return;
       }
       case 'reset': {
