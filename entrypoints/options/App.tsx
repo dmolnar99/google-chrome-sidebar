@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { parseArcSidebar, type ArcImportResult } from '@/src/import/arc';
 import { send } from '@/src/messages';
 import { sidebarStore } from '@/src/model/store';
+import { themeColorStore, useThemeColor } from '@/src/ui/themeStore';
 
 const ARC_PATH = '~/Library/Application Support/Arc/StorableSidebar.json';
 
@@ -22,13 +23,45 @@ function Summary({ result }: { result: ArcImportResult }) {
     .join(', ');
   return (
     <p>
-      {plural(favorites, 'Favorite')}, {plural(items, 'pinned item')} and {plural(folders, 'folder')}.
+      {plural(favorites, 'Favorite')}, {plural(items, 'pinned item')} and {plural(folders, 'folder')}
+      {result.themeColor && (
+        <>
+          , plus your Space's color <span className="swatch" style={{ background: result.themeColor }} />
+        </>
+      )}
+      .
       {skippedText && <span className="muted"> Not supported, left out: {skippedText}.</span>}
     </p>
   );
 }
 
+function Appearance() {
+  const [color, setColor] = useState<string | null>(null);
+  useEffect(() => {
+    themeColorStore.getValue().then(setColor);
+    return themeColorStore.watch(setColor);
+  }, []);
+  return (
+    <>
+      <h1>Appearance</h1>
+      <p className="muted">The sidebar is tinted with this color, like an Arc Space.</p>
+      <div className="row">
+        <label className="button">
+          <span className="swatch" style={{ background: color ?? 'var(--bg)' }} /> {color ? 'Change color…' : 'Choose a color…'}
+          <input type="color" className="visually-hidden" value={color ?? '#9ebece'} onChange={(e) => themeColorStore.setValue(e.target.value)} />
+        </label>
+        {color && (
+          <button className="button" onClick={() => themeColorStore.setValue(null)}>
+            Use neutral
+          </button>
+        )}
+      </div>
+    </>
+  );
+}
+
 export function App() {
+  useThemeColor();
   const [status, setStatus] = useState<Status>({ step: 'idle' });
 
   async function onFile(file: File | undefined) {
@@ -46,6 +79,7 @@ export function App() {
     const hasData = current.favorites.length > 0 || current.pinned.length > 0;
     if (hasData && !confirm('This replaces everything currently in your sidebar. Continue?')) return;
     await send({ type: 'sidebar', op: { type: 'replace', state: result.state } });
+    if (result.themeColor) await themeColorStore.setValue(result.themeColor);
     setStatus({ step: 'done', result });
   }
 
@@ -83,9 +117,16 @@ export function App() {
             <strong>{status.fileName}</strong> contains:
           </p>
           <Summary result={status.result} />
-          <button className="button primary" onClick={() => confirmImport(status.result)}>
-            Import
-          </button>
+          <div className="row">
+            <button className="button primary" onClick={() => confirmImport(status.result)}>
+              Import
+            </button>
+            {status.result.themeColor && (
+              <button className="button" onClick={() => themeColorStore.setValue(status.result.themeColor!)}>
+                Only use its color
+              </button>
+            )}
+          </div>
         </section>
       )}
       {status.step === 'done' && (
@@ -103,6 +144,8 @@ export function App() {
           </p>
         </section>
       )}
+      <hr />
+      <Appearance />
     </main>
   );
 }

@@ -125,6 +125,14 @@ describe('parseArcSidebar', () => {
     expect(state.pinned).toEqual([]);
   });
 
+  it("picks up the first Space's theme color", () => {
+    const file = arcFile({ favorites: [], spaces: [{ id: 's1', title: 'S', pinned: 'p1', unpinned: 'u1' }], items: [] });
+    expect(parseArcSidebar(file).themeColor).toBeUndefined();
+    const space = (file.sidebar.containers[1] as any).spaces[1];
+    space.customInfo = { windowTheme: { primaryColorPalette: { midTone: { red: 0.4236, green: 0.7286, blue: 0.8512 } } } };
+    expect(parseArcSidebar(file).themeColor).toBe('#6cbad9');
+  });
+
   it('rejects files that are not Arc sidebars', () => {
     expect(() => parseArcSidebar({ hello: 'world' })).toThrow(/doesn't look like/);
     expect(() => parseArcSidebar(null)).toThrow(/doesn't look like/);
@@ -139,8 +147,9 @@ const realFile = existsSync(privateDir)
 
 describe.skipIf(!realFile)('parseArcSidebar on the real Arc backup', () => {
   it('imports without errors or skipped items', () => {
-    const { report } = parseArcSidebar(JSON.parse(readFileSync(new URL(realFile!, privateDir), 'utf8')));
+    const { report, themeColor } = parseArcSidebar(JSON.parse(readFileSync(new URL(realFile!, privateDir), 'utf8')));
     expect(report.favorites + report.items).toBeGreaterThan(0);
+    expect(themeColor).toMatch(/^#[0-9a-f]{6}$/);
     expect(report.skipped).toEqual({});
     console.log('Real Arc import:', report);
   });

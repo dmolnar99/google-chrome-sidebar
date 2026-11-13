@@ -2,6 +2,7 @@ import type { DragSource } from '@/src/model/drop';
 import type { Folder, Item, NodeId } from '@/src/model/types';
 import { classes, faviconUrl, type Ctx } from './ctx';
 import { useNodeDnd, useSectionDrop } from './dnd';
+import { CloseIcon, FolderIcon, ResetIcon } from './icons';
 import { folderMenu, itemMenu, pinnedMenu } from './menus';
 import { tabFavicon } from './Tabs';
 
@@ -32,7 +33,7 @@ function ItemRow({ ctx, item }: { ctx: Ctx; item: Item }) {
             ctx.run({ type: 'reset', ...command });
           }}
         >
-          ↺
+          <ResetIcon />
         </button>
       )}
       {ts.open && (
@@ -45,7 +46,7 @@ function ItemRow({ ctx, item }: { ctx: Ctx; item: Item }) {
             ctx.run({ type: 'closeTab', ...command });
           }}
         >
-          ×
+          <CloseIcon />
         </button>
       )}
     </div>
@@ -63,7 +64,7 @@ function FolderRow({ ctx, folder }: { ctx: Ctx; folder: Folder }) {
         onClick={() => ctx.run({ type: 'sidebar', op: { type: 'update', id: folder.id, patch: { collapsed: !folder.collapsed } } })}
         onContextMenu={(e) => ctx.openMenu(e, folderMenu(ctx, folder))}
       >
-        <span className="chevron">{folder.collapsed ? '▸' : '▾'}</span>
+        <FolderIcon open={!folder.collapsed} />
         <span className="title">{folder.title}</span>
       </button>
       {!folder.collapsed && !dnd.isDragging && <Tree ctx={ctx} ids={folder.childIds} />}
@@ -113,7 +114,7 @@ export function DragPreview({ ctx, source, tab }: { ctx: Ctx; source: DragSource
   if (!node) return null;
   return (
     <div className="row drag-preview">
-      {node.kind === 'item' ? <img src={faviconUrl(node.url)} alt="" /> : <span className="chevron">▸</span>}
+      {node.kind === 'item' ? <img src={faviconUrl(node.url)} alt="" /> : <FolderIcon open={false} />}
       <span className="title">{node.title}</span>
     </div>
   );

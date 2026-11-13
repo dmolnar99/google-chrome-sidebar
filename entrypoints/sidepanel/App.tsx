@@ -1,5 +1,6 @@
 import { useCallback, useState } from 'react';
 import { send } from '@/src/messages';
+import { useThemeColor } from '@/src/ui/themeStore';
 import type { Ctx } from './ctx';
 import { tabState } from './ctx';
 import { Dialog, type DialogRequest } from './Dialog';
@@ -11,6 +12,7 @@ import { Tabs, type Tab } from './Tabs';
 import { DragPreview, Pinned } from './Tree';
 
 export function App() {
+  useThemeColor();
   const state = useSidebar();
   const links = useLinks();
   const win = useWindowTabs();

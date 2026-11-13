@@ -1,5 +1,6 @@
 import { classes, faviconUrl, type Ctx } from './ctx';
 import { useSectionDrop, useTabDnd } from './dnd';
+import { CloseIcon, PlusIcon } from './icons';
 import type { MenuEntry } from './Menu';
 
 export type Tab = Browser.tabs.Tab & { id: number };
@@ -42,7 +43,7 @@ function TabRow({ ctx, tab }: { ctx: Ctx; tab: Tab }) {
           browser.tabs.remove(tab.id);
         }}
       >
-        ×
+        <CloseIcon />
       </button>
     </div>
   );
@@ -55,7 +56,7 @@ export function Tabs({ ctx, tabs }: { ctx: Ctx; tabs: Tab[] }) {
     <section ref={section.ref} className={classes('tabs', section.isTarget && 'drop-section')}>
       <div className="divider" />
       <button className="row new-tab" onClick={() => browser.tabs.create({ windowId: ctx.windowId })}>
-        <span className="chevron">+</span>
+        <PlusIcon />
         <span className="title">New Tab</span>
       </button>
       {tabs.map((tab) => (

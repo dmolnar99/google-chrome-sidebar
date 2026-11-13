@@ -27,6 +27,8 @@ export interface ArcImportReport {
 export interface ArcImportResult {
   state: SidebarState;
   report: ArcImportReport;
+  /** The first Space's theme color (#rrggbb), if Arc stored one. */
+  themeColor?: string;
 }
 
 interface ArcItem {
@@ -40,6 +42,19 @@ interface ArcSpace {
   id?: string;
   title?: string | null;
   containerIDs?: unknown[];
+  customInfo?: { windowTheme?: { primaryColorPalette?: { midTone?: ArcColor } } };
+}
+
+interface ArcColor {
+  red?: number;
+  green?: number;
+  blue?: number;
+}
+
+function toHex(color: ArcColor | undefined): string | undefined {
+  if (!color || [color.red, color.green, color.blue].some((c) => typeof c !== 'number')) return undefined;
+  const channel = (c: number) => Math.round(Math.min(1, Math.max(0, c)) * 255).toString(16).padStart(2, '0');
+  return `#${channel(color.red!)}${channel(color.green!)}${channel(color.blue!)}`;
 }
 
 function pairs<V>(list: unknown): [unknown, V][] {
@@ -121,5 +136,6 @@ export function parseArcSidebar(json: unknown): ArcImportResult {
     copyChildren(pinnedId, target, false);
   }
 
-  return { state, report };
+  const themeColor = spaces.map((s) => toHex(s.customInfo?.windowTheme?.primaryColorPalette?.midTone)).find(Boolean);
+  return { state, report, themeColor };
 }
