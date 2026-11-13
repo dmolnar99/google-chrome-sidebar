@@ -136,3 +136,53 @@ describe('Controller: unpin and tab moves', () => {
     await expect(controller.handle({ type: 'unpin', itemId: 'F', windowId, index: 0 })).rejects.toThrow(/Only items/);
   });
 });
+
+describe('Controller: Favorites as pinned tabs and shortcuts', () => {
+  beforeEach(() => fakeBrowser.reset());
+
+  async function withFavorite() {
+    const ctx = await setup();
+    await ctx.controller.handle({ type: 'sidebar', op: { type: 'move', id: 'a', container: 'favorites' } });
+    return ctx;
+  }
+
+  it('pins a Favorite tab in Chrome when it opens, and unpins it when it leaves Favorites', async () => {
+    const { controller, windowId } = await withFavorite();
+    await controller.handle({ type: 'activate', itemId: 'a', windowId });
+    const [tab] = await fakeBrowser.tabs.query({ url: URL_A });
+    expect((await fakeBrowser.tabs.get(tab!.id!)).pinned).toBe(true);
+
+    await controller.handle({ type: 'sidebar', op: { type: 'move', id: 'a', container: 'pinned' } });
+    expect((await fakeBrowser.tabs.get(tab!.id!)).pinned).toBe(false);
+  });
+
+  it("doesn't re-pin a Favorite tab the user unpinned by hand", async () => {
+    const { controller, windowId } = await withFavorite();
+    await controller.handle({ type: 'activate', itemId: 'a', windowId });
+    const [tab] = await fakeBrowser.tabs.query({ url: URL_A });
+    await fakeBrowser.tabs.update(tab!.id!, { pinned: false });
+    await controller.handle({ type: 'sidebar', op: { type: 'update', id: 'b', patch: { title: 'x' } } });
+    expect((await fakeBrowser.tabs.get(tab!.id!)).pinned).toBe(false);
+  });
+
+  it('togglePin pins a plain tab, then removes the item again', async () => {
+    const { controller, windowId } = await setup();
+    const tab = await fakeBrowser.tabs.create({ windowId, url: 'https://new.test/' });
+    await controller.handle({ type: 'togglePin', tabId: tab.id! });
+    const state = await sidebarStore.getValue();
+    expect(state.pinned).toHaveLength(3);
+    expect(await links()).toMatchObject({ [tab.id!]: { itemId: state.pinned[2] } });
+
+    await controller.handle({ type: 'togglePin', tabId: tab.id! });
+    expect((await sidebarStore.getValue()).pinned).toEqual(['a', 'F']);
+    expect(await links()).toEqual({});
+    expect(await fakeBrowser.tabs.get(tab.id!)).toBeDefined();
+  });
+
+  it('openFavorite activates the Favorite at that position, and ignores empty slots', async () => {
+    const { controller, windowId } = await withFavorite();
+    await controller.handle({ type: 'openFavorite', position: 1, windowId });
+    expect(await fakeBrowser.tabs.query({ url: URL_A })).toHaveLength(1);
+    await controller.handle({ type: 'openFavorite', position: 5, windowId });
+  });
+});

@@ -73,3 +73,27 @@ export function relink(tabs: TabInfo[], items: Item[]): Links {
   }
   return links;
 }
+
+/**
+ * Favorite tabs are Chrome-pinned tabs. Given the links and Favorites before and after a change,
+ * returns the tabs whose pinned state should flip. Only tabs whose desired state changed are
+ * touched, so a tab the user unpinned by hand isn't re-pinned on every unrelated change.
+ */
+export function pinChanges(
+  before: { links: Links; favorites: NodeId[] },
+  after: { links: Links; favorites: NodeId[] },
+): { pin: number[]; unpin: number[] } {
+  const wants = (s: typeof before, tabId: string) => {
+    const link = s.links[tabId];
+    return !!link && s.favorites.includes(link.itemId);
+  };
+  const pin: number[] = [];
+  const unpin: number[] = [];
+  for (const tabId of new Set([...Object.keys(before.links), ...Object.keys(after.links)])) {
+    const was = wants(before, tabId);
+    const now = wants(after, tabId);
+    if (now && !was) pin.push(Number(tabId));
+    if (was && !now) unpin.push(Number(tabId));
+  }
+  return { pin, unpin };
+}

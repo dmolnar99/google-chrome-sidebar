@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import type { Links } from '@/src/links/links';
 import { linksStore } from '@/src/links/store';
 import { sidebarStore } from '@/src/model/store';
+import { connectPanel } from '@/src/panelPort';
 import type { SidebarState } from '@/src/model/types';
 
 /** The saved sidebar, kept live across windows via storage change events. */
@@ -39,7 +40,10 @@ export function useWindowTabs(): WindowTabs | undefined {
     const refresh = () => {
       cancelAnimationFrame(pending);
       pending = requestAnimationFrame(async () => {
-        if (windowId === undefined) windowId = (await browser.windows.getCurrent()).id;
+        if (windowId === undefined) {
+          windowId = (await browser.windows.getCurrent()).id;
+          if (windowId !== undefined) connectPanel(windowId);
+        }
         if (windowId === undefined || cancelled) return;
         const tabs = await browser.tabs.query({ windowId });
         if (!cancelled) setValue({ windowId, tabs: new Map(tabs.flatMap((t) => (t.id === undefined ? [] : [[t.id, t]]))) });

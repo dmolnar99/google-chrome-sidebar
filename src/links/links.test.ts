@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { Item } from '@/src/model/types';
-import { linkTab, moveTab, pruneLinks, relink, tabForItem, unlinkTab } from './links';
+import { linkTab, moveTab, pinChanges, pruneLinks, relink, tabForItem, unlinkTab } from './links';
 
 const item = (id: string, url = `https://${id}.test/`): Item => ({ kind: 'item', id, title: id, url });
 
@@ -68,5 +68,19 @@ describe('relink', () => {
       [item('a', 'https://x.test/'), item('b', 'https://x.test/')],
     );
     expect(links).toEqual({ 1: { itemId: 'a', windowId: 10 }, 2: { itemId: 'b', windowId: 10 } });
+  });
+});
+
+describe('pinChanges', () => {
+  const links = { 1: { itemId: 'fav', windowId: 10 }, 2: { itemId: 'pin', windowId: 10 } };
+
+  it('pins tabs that become Favorites and unpins ones that stop being', () => {
+    expect(pinChanges({ links: {}, favorites: ['fav'] }, { links, favorites: ['fav'] })).toEqual({ pin: [1], unpin: [] });
+    expect(pinChanges({ links, favorites: ['fav'] }, { links, favorites: ['pin'] })).toEqual({ pin: [2], unpin: [1] });
+    expect(pinChanges({ links, favorites: ['fav'] }, { links: unlinkTab(links, 1), favorites: ['fav'] })).toEqual({ pin: [], unpin: [1] });
+  });
+
+  it('leaves tabs alone when nothing about them changed', () => {
+    expect(pinChanges({ links, favorites: ['fav'] }, { links, favorites: ['fav'] })).toEqual({ pin: [], unpin: [] });
   });
 });

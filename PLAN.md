@@ -36,7 +36,7 @@ Out (for now): Spaces, Today auto-archive, Archive, Split View, Peek, Little Arc
 - The **X** on an item closes its tab and keeps the item. Delete, rename and edit URL are in the right-click menu.
 - Closing a linked tab any other way also keeps the item.
 - The **background service worker** owns item–tab links, stored in `chrome.storage.session`. After a browser restart it re-links by URL matching, because tab IDs change. The panel only displays what the worker reports.
-- Favorite tabs become Chrome-pinned tabs. Pinned items' tabs are normal Chrome tabs.
+- Favorite tabs become Chrome-pinned tabs. Pinned items' tabs are normal Chrome tabs. Pinning only changes when a tab's Favorite status changes, so a tab the user unpins by hand stays unpinned.
 
 ### Interaction
 - Add items: drag from Tabs into Favorites/Pinned/a folder; right-click a tab → "Add to Favorites" / "Pin"; keyboard shortcut.
@@ -45,7 +45,8 @@ Out (for now): Spaces, Today auto-archive, Archive, Split View, Peek, Little Arc
 - The Tabs list follows Chrome's tab order (new tabs at the bottom). Dragging in the list moves the real Chrome tab.
 
 ### Keyboard shortcuts (`chrome.commands`)
-- Defaults: toggle sidebar (⌥S), pin/unpin current tab (⌥D).
+- Defaults: toggle sidebar (⌥S), pin/unpin current tab (⌥D). Pin/unpin on a Favorite or pinned item's tab removes the item and keeps the tab.
+- Toggle works by open panels holding a port to the worker; closing asks the panel to `window.close()`.
 - "Go to Favorite 1–9": declared with no keys set, assignable in `chrome://extensions/shortcuts`.
 
 ### Favicons
@@ -77,7 +78,7 @@ Out (for now): Spaces, Today auto-archive, Archive, Split View, Peek, Little Arc
 
 ## Milestones
 
-Each step ends with something you can try in Chrome.
+Each step ends with something you can try in Chrome. All six are built (v1 complete, 2026-11-13).
 
 1. Scaffold the project (WXT + React), open the side panel, keep the data model in storage.
 2. Arc import from the real file in `fixtures/private/`.

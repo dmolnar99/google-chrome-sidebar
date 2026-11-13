@@ -1,5 +1,5 @@
 import { linksStore } from '@/src/links/store';
-import { linkTab, moveTab, pruneLinks, relink, tabForItem, unlinkTab, type Links } from '@/src/links/links';
+import { linkTab, moveTab, pinChanges, pruneLinks, relink, tabForItem, unlinkTab, type Links } from '@/src/links/links';
 import type { Command } from '@/src/messages';
 import { finalTabIndex } from '@/src/model/drop';
 import { applyOp } from '@/src/model/ops';
@@ -19,9 +19,28 @@ export class Controller {
   private queue: Promise<unknown> = Promise.resolve();
 
   private run<T>(task: () => Promise<T>): Promise<T> {
-    const result = this.queue.then(task);
+    const result = this.queue.then(() => this.withPinSync(task));
     this.queue = result.catch(() => {});
     return result;
+  }
+
+  /** Runs `task`, then pins or unpins tabs whose Favorite status it changed. */
+  private async withPinSync<T>(task: () => Promise<T>): Promise<T> {
+    const snapshot = async () => ({
+      links: (await linksStore.getValue()) ?? {},
+      favorites: (await sidebarStore.getValue()).favorites,
+    });
+    const before = await snapshot();
+    try {
+      return await task();
+    } finally {
+      const { pin, unpin } = pinChanges(before, await snapshot());
+      // A tab may already be gone (closed, or the window closed); that's fine.
+      await Promise.all([
+        ...pin.map((id) => browser.tabs.update(id, { pinned: true }).catch(() => {})),
+        ...unpin.map((id) => browser.tabs.update(id, { pinned: false }).catch(() => {})),
+      ]);
+    }
   }
 
   private async links(): Promise<Links> {
@@ -130,6 +149,24 @@ export class Controller {
       case 'moveTab':
         await this.moveTabTo(command.tabId, command.index);
         return;
+      case 'togglePin': {
+        const tab = await browser.tabs.get(command.tabId);
+        const link = (await this.links())[command.tabId];
+        if (link) {
+          // Already a Favorite or pinned item: remove the item, keep the tab.
+          const next = applyOp(await sidebarStore.getValue(), { type: 'remove', id: link.itemId });
+          await sidebarStore.setValue(next);
+          await this.updateLinks((l) => pruneLinks(l, (id) => !!next.nodes[id]));
+        } else {
+          await this.execute({ type: 'saveTab', tabId: tab.id!, container: 'pinned' });
+        }
+        return;
+      }
+      case 'openFavorite': {
+        const itemId = (await sidebarStore.getValue()).favorites[command.position - 1];
+        if (itemId) await this.execute({ type: 'activate', itemId, windowId: command.windowId });
+        return;
+      }
     }
   }
 

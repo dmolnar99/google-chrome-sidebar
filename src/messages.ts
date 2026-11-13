@@ -15,7 +15,11 @@ export type Command =
   /** Delete the item but keep (or open) its tab, placed at `index` among the window's tabs. */
   | { type: 'unpin'; itemId: NodeId; windowId: number; index: number }
   /** Move a tab to insertion point `index`, counted before the tab leaves its old spot. */
-  | { type: 'moveTab'; tabId: number; index: number };
+  | { type: 'moveTab'; tabId: number; index: number }
+  /** Pin the tab if it's a plain tab; otherwise remove its Favorite or pinned item and keep the tab. */
+  | { type: 'togglePin'; tabId: number }
+  /** Activate the Favorite at `position` (1-based). */
+  | { type: 'openFavorite'; position: number; windowId: number };
 
 type Response = { ok: true } | { ok: false; error: string };
 
