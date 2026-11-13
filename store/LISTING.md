@@ -74,7 +74,7 @@ Paste-ready text for the Chrome Web Store Developer Dashboard. The images are in
 
 ## Before submitting
 
-- [ ] Fill in the contact email in `PRIVACY.md` and publish it at a public URL.
+- [ ] Publish `PRIVACY.md` at a public URL.
 - [ ] Bump `version` in `package.json`, then run `pnpm zip` and upload `.output/sidebar-<version>-chrome.zip`.
 - [ ] Run `pnpm test && pnpm test:e2e`.
 - [ ] Pay the one-time developer registration fee and verify the publisher email.

@@ -55,4 +55,4 @@ If this policy changes, the new version will be published at the same address wi
 
 ## Contact
 
-Questions: [your contact email]
+Questions or concerns: [radiant-3-brinks@icloud.com](mailto:radiant-3-brinks@icloud.com)
