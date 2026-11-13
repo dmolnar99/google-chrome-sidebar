@@ -1,6 +1,7 @@
 import { classes, faviconUrl, type Ctx } from './ctx';
 import { useSectionDrop, useTabDnd } from './dnd';
 import { CloseIcon, PlusIcon } from './icons';
+import { canSplit } from './menus';
 import type { MenuEntry } from './Menu';
 
 export type Tab = Browser.tabs.Tab & { id: number };
@@ -13,6 +14,9 @@ function tabMenu(ctx: Ctx, tab: Tab): MenuEntry[] {
   return [
     { label: 'Add to Favorites', onSelect: () => ctx.run({ type: 'saveTab', tabId: tab.id, container: 'favorites' }) },
     { label: 'Pin', onSelect: () => ctx.run({ type: 'saveTab', tabId: tab.id, container: 'pinned' }) },
+    ...(canSplit() && !tab.active
+      ? [{ label: 'Open in Split View', onSelect: () => ctx.run({ type: 'split', source: { tabId: tab.id }, windowId: ctx.windowId }) }]
+      : []),
     { label: 'Close tab', danger: true, onSelect: () => browser.tabs.remove(tab.id) },
   ];
 }

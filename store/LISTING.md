@@ -29,6 +29,9 @@ Paste-ready text for the Chrome Web Store Developer Dashboard. The images are in
 > DRAG AND DROP
 > Drag an open tab into the sidebar or a folder to keep it. Drag items around to reorder them. Drag an item down into your tabs to unpin it.
 >
+> SPLIT VIEW
+> Right-click any item or tab and choose Open in Split View to see it side by side with the page you're on (Chrome 155 or later).
+>
 > IMPORT FROM ARC
 > Moving from the Arc browser? Import your Favorites, pinned tabs, folders and your Space's color from Arc's sidebar file in one step.
 >

@@ -28,7 +28,7 @@ const reading = [
   ['MDN Web Docs', 'https://developer.mozilla.org/'],
 ];
 const trips = [['Google Flights', 'https://www.google.com/travel/flights']];
-const plainTabs = ['https://developer.chrome.com/docs/extensions/reference/api/sidePanel', 'https://web.dev/'];
+const plainTabs = ['https://www.apple.com/', 'https://www.nytimes.com/'];
 
 function demoState() {
   const nodes = {};
@@ -116,7 +116,7 @@ const panelLight = path.join(tmp, 'panel-light.png');
 await shootPanel(panelLight);
 
 // Mid-drag: a tab on its way into the Reading folder.
-const tabRow = panel.locator('.tabs .row').filter({ hasText: /Side Panel|sidePanel|chrome\.sidePanel/i }).first();
+const tabRow = panel.locator('.tabs .row:not(.new-tab)').filter({ hasNotText: /^Sidebar/ }).first();
 const target = panel.locator('.pinned .row', { hasText: 'Reading' });
 const from = await tabRow.boundingBox();
 const to = await target.boundingBox();

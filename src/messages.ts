@@ -18,6 +18,8 @@ export type Command =
   | { type: 'moveTab'; tabId: number; index: number }
   /** Pin the tab if it's a plain tab; otherwise remove its Favorite or pinned item and keep the tab. */
   | { type: 'togglePin'; tabId: number }
+  /** Show an item (or a plain tab) side by side with the window's current tab, using Chrome's split view. */
+  | { type: 'split'; source: { itemId: NodeId } | { tabId: number }; windowId: number }
   /** Activate the Favorite at `position` (1-based). */
   | { type: 'openFavorite'; position: number; windowId: number };
 

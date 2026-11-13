@@ -120,3 +120,64 @@ test('backup export and restore round-trip', async ({ context, extensionId, pane
   await expect(options.getByText('Restored')).toBeVisible();
   await expect(row(panel, 'News page')).toBeVisible();
 });
+
+test('text renders at the intended size, not Chrome’s 75% default for extension pages', async ({ panel }) => {
+  const size = await row(panel, 'News page').locator('.title').evaluate((el) => getComputedStyle(el).fontSize);
+  expect(size).toBe('15px');
+});
+
+test.describe('split view', () => {
+  const splitIds = async (worker: import('@playwright/test').Worker, ...urls: string[]) =>
+    Promise.all(urls.map(async (url) => ((await queryTabs(worker, { url }))[0] as { splitViewId?: number } | undefined)?.splitViewId));
+
+  test('opens a closed item in a new tab, split with the current tab', async ({ context, worker, panel }) => {
+    const opened = context.waitForEvent('page');
+    await row(panel, 'News page').click();
+    await (await opened).waitForURL(PAGE('news'));
+
+    await row(panel, 'Docs page').click({ button: 'right' });
+    await panel.getByRole('menuitem', { name: 'Open in Split View' }).click();
+    await expect.poll(async () => {
+      const [news, docs] = await splitIds(worker, PAGE('news'), PAGE('docs'));
+      return news !== undefined && news !== -1 && news === docs;
+    }).toBe(true);
+    // The new tab belongs to the item, so it doesn't show up as a plain tab.
+    await expect(panel.locator('.tabs .row', { hasText: 'Docs page' })).toHaveCount(0);
+  });
+
+  test('moves an item’s open tab next to the current tab instead of duplicating it', async ({ context, worker, panel }) => {
+    for (const name of ['News page', 'Docs page']) {
+      const opened = context.waitForEvent('page');
+      await row(panel, name).click();
+      await opened;
+    }
+    // A plain tab in between, so the two aren't neighbours to begin with.
+    await (await context.newPage()).goto(PAGE('between'));
+    await row(panel, 'Docs page').click(); // Docs is now the current tab
+
+    await row(panel, 'News page').click({ button: 'right' });
+    await panel.getByRole('menuitem', { name: 'Open in Split View' }).click();
+    await expect.poll(async () => {
+      const [news, docs] = await splitIds(worker, PAGE('news'), PAGE('docs'));
+      return news !== undefined && news !== -1 && news === docs;
+    }).toBe(true);
+    expect(await queryTabs(worker, { url: PAGE('news') })).toHaveLength(1);
+  });
+
+  test('splits a Favorite’s pinned tab with a normal tab by unpinning it', async ({ context, worker, panel }) => {
+    const fav = context.waitForEvent('page');
+    await panel.locator('.favorite[title="Mail page"]').click();
+    await (await fav).waitForURL(PAGE('mail'));
+    const news = context.waitForEvent('page');
+    await row(panel, 'News page').click();
+    await news;
+
+    await panel.locator('.favorite[title="Mail page"]').click({ button: 'right' });
+    await panel.getByRole('menuitem', { name: 'Open in Split View' }).click();
+    await expect.poll(async () => {
+      const [mail, newsId] = await splitIds(worker, PAGE('mail'), PAGE('news'));
+      return mail !== undefined && mail !== -1 && mail === newsId;
+    }).toBe(true);
+    expect((await queryTabs(worker, { url: PAGE('mail') }))[0]?.pinned).toBe(false);
+  });
+});

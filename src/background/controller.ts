@@ -5,7 +5,7 @@ import { finalTabIndex } from '@/src/model/drop';
 import { applyOp } from '@/src/model/ops';
 import { sidebarStore } from '@/src/model/store';
 import { newId } from '@/src/model/tree';
-import type { Item, SidebarState } from '@/src/model/types';
+import type { Item, NodeId, SidebarState } from '@/src/model/types';
 
 function allItems(state: SidebarState): Item[] {
   return Object.values(state.nodes).filter((n): n is Item => n.kind === 'item');
@@ -34,7 +34,15 @@ export class Controller {
     try {
       return await task();
     } finally {
-      const { pin, unpin } = pinChanges(before, await snapshot());
+      const changes = pinChanges(before, await snapshot());
+      // A split view's two tabs must share pinned state, so a Favorite's tab stays unpinned while split.
+      const inSplit = async (id: number) => {
+        const tab = await browser.tabs.get(id).catch(() => undefined);
+        return tab?.splitViewId !== undefined && tab.splitViewId !== -1;
+      };
+      const pin = [];
+      for (const id of changes.pin) if (!(await inSplit(id))) pin.push(id);
+      const unpin = changes.unpin;
       // A tab may already be gone (closed, or the window closed); that's fine.
       await Promise.all([
         ...pin.map((id) => browser.tabs.update(id, { pinned: true }).catch(() => {})),
@@ -163,12 +171,52 @@ export class Controller {
         }
         return;
       }
+      case 'split':
+        await this.split(command.source, command.windowId);
+        return;
       case 'openFavorite': {
         const itemId = (await sidebarStore.getValue()).favorites[command.position - 1];
         if (itemId) await this.execute({ type: 'activate', itemId, windowId: command.windowId });
         return;
       }
     }
+  }
+
+  /**
+   * Puts an item's tab (or a plain tab) in a split view with the window's active tab. Chrome only
+   * splits two adjacent tabs that aren't split yet and share pinned state and tab group, so this
+   * arranges that first. An item without a tab here opens in a new tab, straight into the split.
+   */
+  private async split(source: { itemId: NodeId } | { tabId: number }, windowId: number) {
+    const [active] = await browser.tabs.query({ active: true, windowId });
+    if (active?.id === undefined) return;
+    let tabId = 'tabId' in source ? source.tabId : tabForItem(await this.links(), source.itemId, windowId);
+    if (tabId === active.id) return; // already the current tab: nothing to split with
+
+    const unsplit = async (tab: Browser.tabs.Tab) => {
+      if (tab.splitViewId !== undefined && tab.splitViewId !== -1) await browser.tabs.unsplit(tab.splitViewId);
+    };
+    await unsplit(active);
+
+    if (tabId === undefined) {
+      const item = 'itemId' in source ? (await sidebarStore.getValue()).nodes[source.itemId] : undefined;
+      if (item?.kind !== 'item') throw new Error('Nothing to open in split view');
+      const tab = await browser.tabs.create({ splitWithTabId: active.id, url: item.url, active: true });
+      if (tab.id !== undefined) await this.updateLinks((l) => linkTab(l, tab.id!, item.id, windowId));
+      return;
+    }
+
+    let tab: Browser.tabs.Tab = await browser.tabs.get(tabId);
+    await unsplit(tab);
+    if (tab.pinned !== active.pinned) tab = (await browser.tabs.update(tabId, { pinned: active.pinned })) ?? tab;
+    if (tab.groupId !== active.groupId) {
+      if (active.groupId === -1) await browser.tabs.ungroup(tabId);
+      else await browser.tabs.group({ groupId: active.groupId, tabIds: [tabId] });
+    }
+    const current = await browser.tabs.get(active.id);
+    await browser.tabs.move(tabId, { index: finalTabIndex((await browser.tabs.get(tabId)).index, current.index + 1) });
+    await browser.tabs.createSplit([active.id, tabId]);
+    await browser.tabs.update(tabId, { active: true });
   }
 
   private async moveTabTo(tabId: number, insertAt: number) {

@@ -16,6 +16,9 @@ export function normalizeUrl(input: string): string | undefined {
 
 const edit = (ctx: Ctx, op: SidebarOp) => ctx.run({ type: 'sidebar', op });
 
+/** Chrome 155+ lets extensions create split views. */
+export const canSplit = () => typeof browser.tabs.createSplit === 'function';
+
 /** Creates a folder and asks for its name straight away. */
 export function newFolder(ctx: Ctx, container: ContainerId, index?: number) {
   const id = newId();
@@ -28,6 +31,9 @@ export function itemMenu(ctx: Ctx, item: Item): MenuEntry[] {
   const ts = ctx.tabStateOf(item);
   return [
     ...(ts.drifted ? [{ label: 'Back to saved URL', onSelect: () => ctx.run({ type: 'reset', itemId: item.id, windowId }) }] : []),
+    ...(canSplit() && !ts.active
+      ? [{ label: 'Open in Split View', onSelect: () => ctx.run({ type: 'split', source: { itemId: item.id }, windowId }) }]
+      : []),
     ...(ts.open ? [{ label: 'Close tab', onSelect: () => ctx.run({ type: 'closeTab', itemId: item.id, windowId }) }] : []),
     {
       label: 'Rename…',

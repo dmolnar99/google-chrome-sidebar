@@ -41,4 +41,5 @@
   }
 }
 * { box-sizing: border-box; }
-body { margin: 0; background: var(--bg); color: var(--fg); -webkit-font-smoothing: antialiased; }
+/* Chrome gives extension pages `body { font-size: 75% }`; take the size from :root instead. */
+body { margin: 0; background: var(--bg); color: var(--fg); font: inherit; -webkit-font-smoothing: antialiased; }

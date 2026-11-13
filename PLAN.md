@@ -44,6 +44,9 @@ Out (for now): Spaces, Today auto-archive, Archive, Split View, Peek, Little Arc
 - Folders: click to collapse/expand, state persisted. Rename/delete via right-click menu. Deleting a non-empty folder asks for confirmation. No "open all".
 - The Tabs list follows Chrome's tab order (new tabs at the bottom). Dragging in the list moves the real Chrome tab.
 
+### Split view
+- Right-click → Open in Split View (items and plain tabs, Chrome 155+, hidden otherwise). An item without a tab opens in a new tab split with the current one; an open tab is moved next to the current tab, with pinned state and tab group matched, then split. A Favorite's tab stays unpinned while it's in a split.
+
 ### Keyboard shortcuts (`chrome.commands`)
 - Defaults: toggle sidebar (⌥S), pin/unpin current tab (⌥D). Pin/unpin on a Favorite or pinned item's tab removes the item and keeps the tab.
 - Toggle works by open panels holding a port to the worker; closing asks the panel to `window.close()`.
