@@ -54,7 +54,9 @@ Out (for now): Spaces, Today auto-archive, Archive, Split View, Peek, Little Arc
 ### Arc import
 - Source: `~/Library/Application Support/Arc/StorableSidebar.json`, picked via a file input on the options page.
 - Arc Favorites (top-level container) → Favorites.
-- Each Arc Space's pinned items → one top-level folder named after the Space. Nested folders are kept.
+- Each Arc Space's pinned items → one top-level folder named after the Space. Nested folders are kept. With only one Space, its pinned items go straight into Pinned.
+- Folders inside Favorites and split views are flattened (their tabs are kept). Unsupported kinds such as easels are skipped and listed in the import summary.
+- Import replaces the current sidebar, asking first if it isn't empty.
 - Arc's format: flat `items` list linked by `parentID` / `childrenIds`; `spaceModels` hold each Space's `containerIDs`; `topAppsContainerIDs` hold Favorites.
 - A private backup lives in `fixtures/private/` (git-ignored). Committed test inputs are a small anonymised version of it.
 
