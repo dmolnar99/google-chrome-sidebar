@@ -1,0 +1,20 @@
+:root {
+  color-scheme: light dark;
+  --bg: #f3f1ee;
+  --fg: #1d1c1a;
+  --muted: #6f6b66;
+  --tile: rgba(0, 0, 0, 0.05);
+  --hover: rgba(0, 0, 0, 0.06);
+  font: 13px/1.4 system-ui, -apple-system, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #1f1e1d;
+    --fg: #ecebe8;
+    --muted: #9b978f;
+    --tile: rgba(255, 255, 255, 0.06);
+    --hover: rgba(255, 255, 255, 0.08);
+  }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--fg); }

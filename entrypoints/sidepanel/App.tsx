@@ -81,8 +81,14 @@ function Tree({ state, ids }: { state: SidebarState; ids: NodeId[] }) {
 export function App() {
   const state = useSidebar();
   if (!state) return null;
+  const isEmpty = state.favorites.length === 0 && state.pinned.length === 0;
   return (
     <main>
+      {isEmpty && (
+        <button className="empty" onClick={() => browser.runtime.openOptionsPage()}>
+          Import your Arc sidebar…
+        </button>
+      )}
       <Favorites state={state} />
       <Tree state={state} ids={state.pinned} />
       {/* Temporary controls until drag-and-drop and context menus land (milestones 3–4). */}
