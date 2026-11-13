@@ -1,12 +1,15 @@
 @import '@/src/ui/theme.css';
 
-html { scrollbar-width: none; }
-main { padding: 6px; display: flex; flex-direction: column; gap: 6px; min-height: 100vh; }
+/* Favorites stay put at the top; everything below scrolls, like Arc. */
+main { height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+.top { flex: none; padding: 6px 6px 0; border-bottom: 1px solid transparent; transition: border-color 0.15s; }
+.top.scrolled { border-bottom-color: var(--line); }
+.scroll { flex: 1; min-height: 0; overflow-y: auto; scrollbar-width: none; padding: 6px; display: flex; flex-direction: column; gap: 6px; }
 .error { position: sticky; bottom: 8px; }
 button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
 
 /* Favorites: three wide tiles per row, like Arc */
-.favorites { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-bottom: 8px; }
+.favorites { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-bottom: 6px; }
 .favorite { height: 46px; min-width: 0; border-radius: 12px; background: var(--tile); display: grid; place-items: center; transition: background 0.12s; }
 .favorite:hover { background: var(--hover); }
 .favorite img { width: 20px; height: 20px; }
@@ -15,12 +18,12 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 /* Rows: pinned items, folders, tabs */
 .tree { list-style: none; margin: 0; padding: 0; }
 .tree .tree { padding-left: 0; } /* Arc doesn't indent folder contents */
-.row { display: flex; align-items: center; gap: 12px; width: 100%; height: 40px; padding: 0 8px 0 10px; border-radius: 10px; text-align: left; cursor: default; outline: none; font-weight: 450; }
+.row { display: flex; align-items: center; gap: 12px; width: 100%; height: 40px; padding: 0 8px 0 10px; border-radius: 10px; text-align: left; cursor: default; outline: none; font-weight: 500; }
 .row:hover, .row:focus-visible { background: var(--hover); }
 .row.active { background: var(--active); box-shadow: var(--active-shadow); }
 .row img, .row .glyph { width: 16px; height: 16px; flex: none; }
 .row .title { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.row.folder .title { font-weight: 600; }
+.row.folder .title { font-weight: 700; }
 .row.folder .glyph { width: 18px; height: 18px; margin: 0 -1px; }
 .row .icon { flex: none; display: grid; place-items: center; width: 22px; height: 22px; border-radius: 6px; color: var(--muted); }
 .row .icon:hover { background: var(--tile); color: var(--fg); }

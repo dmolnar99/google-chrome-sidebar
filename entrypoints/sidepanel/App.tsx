@@ -19,6 +19,7 @@ export function App() {
   const [menu, setMenu] = useState<{ x: number; y: number; entries: MenuEntry[] }>();
   const [dialog, setDialog] = useState<DialogRequest>();
   const [error, setError] = useState<string>();
+  const [scrolled, setScrolled] = useState(false);
   const closeMenu = useCallback(() => setMenu(undefined), []);
 
   if (!state || !win) return null;
@@ -65,14 +66,18 @@ export function App() {
       renderOverlay={(source) => <DragPreview ctx={ctx} source={source} tab={source.kind === 'tab' ? win.tabs.get(source.tabId) : undefined} />}
     >
       <main onContextMenu={(e) => e.preventDefault()}>
-        {isEmpty && (
-          <button className="empty" onClick={() => browser.runtime.openOptionsPage()}>
-            Import your Arc sidebar…
-          </button>
-        )}
-        <Favorites ctx={ctx} />
-        <Pinned ctx={ctx} />
-        <Tabs ctx={ctx} tabs={plainTabs} />
+        <div className={scrolled ? 'top scrolled' : 'top'}>
+          <Favorites ctx={ctx} />
+        </div>
+        <div className="scroll" onScroll={(e) => setScrolled(e.currentTarget.scrollTop > 0)}>
+          {isEmpty && (
+            <button className="empty" onClick={() => browser.runtime.openOptionsPage()}>
+              Import your Arc sidebar…
+            </button>
+          )}
+          <Pinned ctx={ctx} />
+          <Tabs ctx={ctx} tabs={plainTabs} />
+        </div>
         {error && <p className="error">{error}</p>}
         {menu && <Menu {...menu} onClose={closeMenu} />}
         {dialog && <Dialog request={dialog} onClose={() => setDialog(undefined)} />}

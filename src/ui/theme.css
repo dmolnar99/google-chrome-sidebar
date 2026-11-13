@@ -18,7 +18,9 @@
   --shadow: 0 6px 24px rgba(0, 0, 0, 0.16), 0 0 0 1px rgba(0, 0, 0, 0.06);
   --danger: #c2402f;
   --accent: #3b6fe0;
-  font: 14px/1.4 system-ui, -apple-system, sans-serif;
+  /* SF Pro on macOS, as in Arc. (Chrome ignores -apple-system, so system-ui it is.) */
+  font: 14px/1.4 system-ui, sans-serif;
+  letter-spacing: -0.1px;
 }
 @media (prefers-color-scheme: dark) {
   :root {
