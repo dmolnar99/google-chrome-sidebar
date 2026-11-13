@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
+import { backupFileName, countSidebar, createBackup, parseBackup, type SidebarCounts } from '@/src/backup/backup';
 import { parseArcSidebar, type ArcImportResult } from '@/src/import/arc';
 import { send } from '@/src/messages';
 import { sidebarStore } from '@/src/model/store';
+import type { SidebarState } from '@/src/model/types';
 import { themeColorStore, useThemeColor } from '@/src/ui/themeStore';
 
 const ARC_PATH = '~/Library/Application Support/Arc/StorableSidebar.json';
@@ -35,6 +37,122 @@ function Summary({ result }: { result: ArcImportResult }) {
   );
 }
 
+function describe({ favorites, items, folders }: SidebarCounts) {
+  return `${plural(favorites, 'Favorite')}, ${plural(items, 'pinned item')} and ${plural(folders, 'folder')}`;
+}
+
+/** Replaces the sidebar, asking first if there's something to lose. */
+async function replaceSidebar(state: SidebarState): Promise<boolean> {
+  const current = await sidebarStore.getValue();
+  const hasData = current.favorites.length > 0 || current.pinned.length > 0;
+  if (hasData && !confirm('This replaces everything currently in your sidebar. Export a backup first if you might want it back. Continue?')) {
+    return false;
+  }
+  await send({ type: 'sidebar', op: { type: 'replace', state } });
+  return true;
+}
+
+function FileButton({ label, onFile }: { label: string; onFile: (file: File) => void }) {
+  return (
+    <label className="button">
+      {label}
+      <input
+        type="file"
+        accept=".json,application/json"
+        hidden
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          if (file) onFile(file);
+          e.target.value = '';
+        }}
+      />
+    </label>
+  );
+}
+
+const errorMessage = (e: unknown) => (e instanceof Error ? e.message : String(e));
+
+type BackupStatus =
+  | { step: 'idle' }
+  | { step: 'preview'; fileName: string; backup: ReturnType<typeof parseBackup> }
+  | { step: 'done'; message: string }
+  | { step: 'error'; message: string };
+
+function BackupSection() {
+  const [status, setStatus] = useState<BackupStatus>({ step: 'idle' });
+
+  async function exportBackup() {
+    const backup = createBackup(await sidebarStore.getValue(), await themeColorStore.getValue());
+    const url = URL.createObjectURL(new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' }));
+    const a = Object.assign(document.createElement('a'), { href: url, download: backupFileName() });
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    setStatus({ step: 'done', message: `Exported ${describe(countSidebar(backup.sidebar))}.` });
+  }
+
+  async function onFile(file: File) {
+    try {
+      setStatus({ step: 'preview', fileName: file.name, backup: parseBackup(JSON.parse(await file.text())) });
+    } catch (e) {
+      setStatus({ step: 'error', message: errorMessage(e) });
+    }
+  }
+
+  async function restore(backup: ReturnType<typeof parseBackup>) {
+    if (!(await replaceSidebar(backup.sidebar))) return;
+    await themeColorStore.setValue(backup.themeColor);
+    setStatus({ step: 'done', message: `Restored ${describe(countSidebar(backup.sidebar))}.` });
+  }
+
+  return (
+    <>
+      <h1>Backup</h1>
+      <p className="muted">
+        Your sidebar lives only in this Chrome profile. Export it to a file now and then, and restore it here if anything
+        goes wrong or you set up another computer.
+      </p>
+      <div className="row">
+        <button className="button" onClick={exportBackup}>
+          Export…
+        </button>
+        <FileButton label="Restore from file…" onFile={onFile} />
+      </div>
+      {status.step === 'preview' && (
+        <section className="card">
+          <p>
+            <strong>{status.fileName}</strong>
+            {status.backup.exportedAt && <span className="muted"> · exported {new Date(status.backup.exportedAt).toLocaleString()}</span>}
+          </p>
+          <p>
+            {describe(countSidebar(status.backup.sidebar))}
+            {status.backup.themeColor && (
+              <>
+                , color <span className="swatch" style={{ background: status.backup.themeColor }} />
+              </>
+            )}
+            .
+          </p>
+          <button className="button primary" onClick={() => restore(status.backup)}>
+            Restore
+          </button>
+        </section>
+      )}
+      {status.step === 'done' && (
+        <section className="card">
+          <p>{status.message}</p>
+        </section>
+      )}
+      {status.step === 'error' && (
+        <section className="card error">
+          <p>
+            <strong>Couldn't restore that file.</strong> {status.message}
+          </p>
+        </section>
+      )}
+    </>
+  );
+}
+
 function Appearance() {
   const [color, setColor] = useState<string | null>(null);
   useEffect(() => {
@@ -64,21 +182,17 @@ export function App() {
   useThemeColor();
   const [status, setStatus] = useState<Status>({ step: 'idle' });
 
-  async function onFile(file: File | undefined) {
-    if (!file) return;
+  async function onFile(file: File) {
     try {
       const result = parseArcSidebar(JSON.parse(await file.text()));
       setStatus({ step: 'preview', fileName: file.name, result });
     } catch (e) {
-      setStatus({ step: 'error', message: e instanceof Error ? e.message : String(e) });
+      setStatus({ step: 'error', message: errorMessage(e) });
     }
   }
 
   async function confirmImport(result: ArcImportResult) {
-    const current = await sidebarStore.getValue();
-    const hasData = current.favorites.length > 0 || current.pinned.length > 0;
-    if (hasData && !confirm('This replaces everything currently in your sidebar. Continue?')) return;
-    await send({ type: 'sidebar', op: { type: 'replace', state: result.state } });
+    if (!(await replaceSidebar(result.state))) return;
     if (result.themeColor) await themeColorStore.setValue(result.themeColor);
     setStatus({ step: 'done', result });
   }
@@ -98,18 +212,7 @@ export function App() {
         had several Spaces, each becomes a folder.
       </p>
 
-      <label className="button">
-        Choose file…
-        <input
-          type="file"
-          accept=".json,application/json"
-          hidden
-          onChange={(e) => {
-            onFile(e.target.files?.[0]);
-            e.target.value = '';
-          }}
-        />
-      </label>
+      <FileButton label="Choose file…" onFile={onFile} />
 
       {status.step === 'preview' && (
         <section className="card">
@@ -144,6 +247,8 @@ export function App() {
           </p>
         </section>
       )}
+      <hr />
+      <BackupSection />
       <hr />
       <Appearance />
     </main>

@@ -27,7 +27,7 @@ Out (for now): Spaces, Today auto-archive, Archive, Split View, Peek, Little Arc
 - The extension owns sidebar data in `chrome.storage.local`. Items exist whether or not they have a live tab. Nothing goes into Chrome bookmarks.
 - Tree: Favorites (flat) + Pinned (items and folders, nested).
 - Same saved sidebar in every window.
-- No sync. Manual JSON export/import as backup.
+- No sync. Manual JSON export/restore on the settings page (includes the theme color); restore rebuilds the tree through the normal operations, so damaged files are repaired rather than trusted.
 
 ### Item ↔ tab linking
 - Each item has at most one live tab **per window**.
