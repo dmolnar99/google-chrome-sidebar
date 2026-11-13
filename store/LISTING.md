@@ -70,11 +70,11 @@ Paste-ready text for the Chrome Web Store Developer Dashboard. The images are in
 - Data collected: none. No category ticked, since nothing leaves the device. If a reviewer asks, explain that URLs and titles of tabs the user chooses to save are stored locally in chrome.storage only.
 - Certify all three: not sold to third parties; not used or transferred for purposes unrelated to the single purpose; not used or transferred to determine creditworthiness or for lending.
 
-**Privacy policy URL:** host `PRIVACY.md` publicly (for example on GitHub Pages or as a public GitHub file) and paste its URL here.
+**Privacy policy URL:** https://github.com/dmolnar99/google-chrome-sidebar/blob/main/PRIVACY.md
+(If you later turn on GitHub Pages for the repo, https://dmolnar99.github.io/google-chrome-sidebar/PRIVACY.html is a cleaner alternative.)
 
 ## Before submitting
 
-- [ ] Publish `PRIVACY.md` at a public URL.
 - [ ] Bump `version` in `package.json`, then run `pnpm zip` and upload `.output/sidebar-<version>-chrome.zip`.
 - [ ] Run `pnpm test && pnpm test:e2e`.
 - [ ] Pay the one-time developer registration fee and verify the publisher email.
