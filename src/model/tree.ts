@@ -8,7 +8,7 @@ export function newId(): NodeId {
   return crypto.randomUUID();
 }
 
-function childList(state: SidebarState, container: ContainerId): NodeId[] {
+export function childList(state: SidebarState, container: ContainerId): NodeId[] {
   if (container === 'favorites') return state.favorites;
   if (container === 'pinned') return state.pinned;
   const folder = state.nodes[container];
@@ -44,13 +44,18 @@ function withChildList(state: SidebarState, container: ContainerId, list: NodeId
   return { ...state, nodes: { ...state.nodes, [container]: { ...folder, childIds: list } } };
 }
 
-function assertCanHold(state: SidebarState, container: ContainerId, node: SidebarNode) {
-  if (container === 'favorites' && node.kind === 'folder') {
-    throw new Error('Favorites can only hold items');
-  }
+/** Why `node` can't go into `container`, or undefined if it can. */
+export function cannotHold(state: SidebarState, container: ContainerId, node: SidebarNode): string | undefined {
+  if (container === 'favorites' && node.kind === 'folder') return 'Favorites can only hold items';
   if (node.kind === 'folder' && (container === node.id || isDescendant(state, node.id, container))) {
-    throw new Error('Cannot move a folder into itself');
+    return 'Cannot move a folder into itself';
   }
+  return undefined;
+}
+
+function assertCanHold(state: SidebarState, container: ContainerId, node: SidebarNode) {
+  const reason = cannotHold(state, container, node);
+  if (reason) throw new Error(reason);
   childList(state, container); // throws on unknown container
 }
 

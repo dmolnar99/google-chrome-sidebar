@@ -10,6 +10,7 @@
   --surface: #ffffff;
   --shadow: 0 6px 24px rgba(0, 0, 0, 0.16), 0 0 0 1px rgba(0, 0, 0, 0.06);
   --danger: #c2402f;
+  --accent: #3b6fe0;
   font: 13px/1.4 system-ui, -apple-system, sans-serif;
 }
 @media (prefers-color-scheme: dark) {
@@ -24,6 +25,7 @@
     --surface: #2b2a28;
     --shadow: 0 6px 24px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.08);
     --danger: #ef7a68;
+    --accent: #7aa2ff;
   }
 }
 * { box-sizing: border-box; }
