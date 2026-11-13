@@ -3,8 +3,8 @@
 main { padding: 10px; display: flex; flex-direction: column; gap: 10px; min-height: 100vh; }
 button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
 
-.favorites { display: grid; grid-template-columns: repeat(auto-fill, minmax(48px, 1fr)); gap: 6px; }
-.favorite { aspect-ratio: 1; border-radius: 10px; background: var(--tile); display: grid; place-items: center; position: relative; }
+.favorites { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+.favorite { height: 44px; min-width: 0; border-radius: 10px; background: var(--tile); display: grid; place-items: center; position: relative; }
 .favorite:hover { background: var(--hover); }
 .favorite img { width: 20px; height: 20px; }
 .favorite.open::after { content: ''; position: absolute; bottom: 5px; width: 4px; height: 4px; border-radius: 50%; background: var(--muted); }
